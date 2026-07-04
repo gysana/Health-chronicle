@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Chronicle - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #070d1a;
+            color: #e0e6f0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            background: #0d1526;
+            border-right: 1px solid rgba(44,123,229,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+        .sidebar-logo {
+            padding: 0 24px 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .sidebar-logo span { color: #2c7be5; }
+        .sidebar-menu { padding: 24px 12px; flex: 1; }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #8899aa;
+            font-size: 14px;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+        .menu-item:hover { background: rgba(44,123,229,0.1); color: white; }
+        .menu-item.active { background: rgba(44,123,229,0.2); color: #2c7be5; border: 1px solid rgba(44,123,229,0.3); }
+        .menu-icon { font-size: 18px; }
+        .sidebar-bottom {
+            padding: 16px 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #2c7be5, #20c997);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .user-name { font-size: 13px; font-weight: bold; }
+        .logout-btn {
+            font-size: 11px;
+            color: #dc3545;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        /* TOP BAR */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .topbar h2 { font-size: 24px; font-weight: bold; }
+        .topbar p { color: #8899aa; font-size: 14px; margin-top: 4px; }
+        .add-btn {
+            background: linear-gradient(135deg, #2c7be5, #1a68d1);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(44,123,229,0.3);
+            transition: all 0.2s;
+        }
+        .add-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(44,123,229,0.4); }
+
+        /* STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #0d1526;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .stat-card:hover { border-color: rgba(44,123,229,0.3); transform: translateY(-2px); }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            opacity: 0.08;
+        }
+        .stat-card:nth-child(1)::before { background: #2c7be5; }
+        .stat-card:nth-child(2)::before { background: #20c997; }
+        .stat-card:nth-child(3)::before { background: #e83e8c; }
+        .stat-card:nth-child(4)::before { background: #ffc107; }
+        .stat-icon { font-size: 28px; margin-bottom: 12px; }
+        .stat-number { font-size: 32px; font-weight: bold; color: white; }
+        .stat-label { font-size: 12px; color: #8899aa; margin-top: 4px; }
+
+        /* ECG LINE */
+        .ecg-card {
+            background: #0d1526;
+            border: 1px solid rgba(44,123,229,0.15);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .ecg-title { font-size: 14px; color: #8899aa; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .ecg-title span { width: 8px; height: 8px; background: #20c997; border-radius: 50%; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .ecg-svg { width: 100%; height: 60px; }
+
+        /* PATIENTS SECTION */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .section-title { font-size: 18px; font-weight: bold; }
+        .section-count { font-size: 13px; color: #8899aa; }
+
+        /* PATIENT CARDS */
+        .patients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+        .patient-card {
+            background: #0d1526;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .patient-card:hover {
+            border-color: rgba(44,123,229,0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(44,123,229,0.15);
+        }
+        .patient-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+        .patient-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2c7be5, #20c997);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+        .patient-name { font-size: 16px; font-weight: bold; color: white; }
+        .patient-condition {
+            font-size: 12px;
+            color: #8899aa;
+            margin-top: 2px;
+        }
+        .patient-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .detail-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+        .detail-label { font-size: 11px; color: #8899aa; }
+        .detail-value { font-size: 13px; color: white; font-weight: 600; margin-top: 2px; }
+        .view-records-btn {
+            width: 100%;
+            background: rgba(44,123,229,0.15);
+            border: 1px solid rgba(44,123,229,0.3);
+            color: #2c7be5;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .view-records-btn:hover { background: rgba(44,123,229,0.25); }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8899aa;
+        }
+        .empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
+        .empty-state p { font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-logo">🏥 Health <span>Chronicle</span></div>
+    <div class="sidebar-menu">
+        <div class="menu-item active">
+            <span class="menu-icon">🏠</span> Dashboard
+        </div>
+        <div class="menu-item" onclick="window.location.href='add-patient.html'">
+            <span class="menu-icon">➕</span> Add Patient
+        </div>
+        <div class="menu-item" onclick="window.location.href='landing.html'">
+            <span class="menu-icon">🌐</span> Home Page
+        </div>
+    </div>
+    <div class="sidebar-bottom">
+        <div class="user-info">
+            <div class="user-avatar">👤</div>
+            <div>
+                <div class="user-name" id="userName">Loading...</div>
+                <div class="logout-btn" onclick="logout()">Logout →</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div>
+            <h2>Patient Dashboard</h2>
+            <p>Monitor your family's health in real-time</p>
+        </div>
+        <button class="add-btn" onclick="window.location.href='add-patient.html'">
+            ➕ Add New Patient
+        </button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-number" id="totalPatients">0</div>
+            <div class="stat-label">Total Patients</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Monitoring Active</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🚨</div>
+            <div class="stat-number">Instant</div>
+            <div class="stat-label">Alert System</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📄</div>
+            <div class="stat-number">PDF</div>
+            <div class="stat-label">Export Ready</div>
+        </div>
+    </div>
+
+    <!-- ECG LINE -->
+    <div class="ecg-card">
+        <div class="ecg-title">
+            <span></span> Live Health Monitor — Health Chronicle
+        </div>
+        <svg class="ecg-svg" viewBox="0 0 1200 60" preserveAspectRatio="none">
+            <polyline
+                points="0,30 50,30 70,30 80,5 90,55 100,30 150,30 200,30 220,30 230,5 240,55 250,30 300,30 350,30 370,30 380,5 390,55 400,30 450,30 500,30 520,30 530,5 540,55 550,30 600,30 650,30 670,30 680,5 690,55 700,30 750,30 800,30 820,30 830,5 840,55 850,30 900,30 950,30 970,30 980,5 990,55 1000,30 1050,30 1100,30 1120,30 1130,5 1140,55 1150,30 1200,30"
+                fill="none"
+                stroke="#20c997"
+                stroke-width="2"
+                opacity="0.8"
+            />
+        </svg>
+    </div>
+
+    <!-- PATIENTS -->
+    <div class="section-header">
+        <div class="section-title">All Patients</div>
+        <div class="section-count" id="patientCount"></div>
+    </div>
+
+    <div class="patients-grid" id="patientCards">
+        <div class="empty-state">
+            <div class="emoji">⏳</div>
+            <p>Loading patients...</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    if (!localStorage.getItem('token')) {
+        window.location.href = 'login.html';
+    }
+
+    document.getElementById('userName').innerText = localStorage.getItem('userName') || 'User';
+
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userName');
+        window.location.href = 'login.html';
+    }
+
+    async function loadPatients() {
+        try {
+            const response = await fetch('http://localhost:5000/api/patients/all', {
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+});
+            const patients = await response.json();
+
+            document.getElementById('totalPatients').innerText = patients.length;
+            document.getElementById('patientCount').innerText = `${patients.length} patient${patients.length !== 1 ? 's' : ''} registered`;
+
+            const container = document.getElementById('patientCards');
+
+            if (patients.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="emoji">🏥</div>
+                        <p>No patients yet. Add your first patient!</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = patients.map(p => `
+                <div class="patient-card" onclick="window.location.href='patient1.html?id=${p._id}'">
+                    <div class="patient-header">
+                        <div class="patient-avatar">${p.name.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <div class="patient-name">${p.name}</div>
+                            <div class="patient-condition">${p.condition}</div>
+                        </div>
+                    </div>
+                    <div class="patient-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Age</div>
+                            <div class="detail-value">${p.age} years</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Gender</div>
+                            <div class="detail-value">${p.gender}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value">${p.phone || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Status</div>
+                            <div class="detail-value" style="color:#20c997;">● Active</div>
+                        </div>
+                    </div>
+                    <button class="view-records-btn">View Health Records →</button>
+                </div>
+            `).join('');
+
+        } catch (error) {
+            document.getElementById('patientCards').innerHTML = `
+                <div class="empty-state">
+                    <div class="emoji">⚠️</div>
+                    <p>Error loading patients. Make sure server is running!</p>
+                </div>`;
+        }
+    }
+
+    window.onload = loadPatients;
+</script>
+
+</body>
+</html>

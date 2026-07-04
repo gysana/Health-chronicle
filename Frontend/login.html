@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Health Chronicle</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #0a1628, #0d1f3c); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .box {
+            background: #0d1526;
+            border: 1px solid rgba(44,123,229,0.2);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            width: 100%;
+            max-width: 480px;
+        }
+        .logo { text-align: center; font-size: 40px; margin-bottom: 8px; }
+        h2 { text-align: center; color: #2c7be5; margin-bottom: 6px; font-size: 24px; }
+        .subtitle { text-align: center; color: #8899aa; font-size: 14px; margin-bottom: 28px; }
+        .tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: #8899aa; font-weight: bold; font-size: 14px; }
+        .tab.active { color: #2c7be5; border-bottom: 2px solid #2c7be5; }
+        .form-group { margin-bottom: 16px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: bold; color: #8899aa; }
+        input, select { width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 14px; outline: none; background: rgba(255,255,255,0.05); color: white; }
+        input:focus, select:focus { border-color: #2c7be5; }
+        select option { background: #0d1526; }
+        .section-label { font-size: 12px; color: #2c7be5; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 12px; }
+        .btn { width: 100%; background: #2c7be5; color: white; padding: 13px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 8px; font-weight: bold; }
+        .btn:hover { background: #1a68d1; }
+        .msg { padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; display: none; text-align: center; }
+        .msg.success { background: rgba(32,201,151,0.1); color: #20c997; border: 1px solid rgba(32,201,151,0.3); }
+        .msg.error { background: rgba(220,53,69,0.1); color: #dc3545; border: 1px solid rgba(220,53,69,0.3); }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <div class="logo">🏥</div>
+    <h2>Health Chronicle</h2>
+    <p class="subtitle">Monitor your family's health</p>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('login')">Login</div>
+        <div class="tab" onclick="showTab('register')">Register</div>
+    </div>
+
+    <div class="msg" id="msg"></div>
+
+    <!-- Login Form -->
+    <div id="loginForm">
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="Enter your email" />
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter your password" />
+        </div>
+        <button class="btn" onclick="login()">Login</button>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" style="display:none;">
+        
+        <div class="section-label">👤 Account Details</div>
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="regName" placeholder="Enter your full name" />
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="regEmail" placeholder="Enter email" />
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="regPassword" placeholder="Create password" />
+            </div>
+        </div>
+
+        <div class="section-label">🏥 Patient Details</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Age</label>
+                <input type="number" id="regAge" placeholder="Age" />
+            </div>
+            <div class="form-group">
+                <label>Gender</label>
+                <select id="regGender">
+                    <option value="">Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Medical Condition</label>
+            <input type="text" id="regCondition" placeholder="e.g. Diabetes, Hypertension" />
+        </div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="regPhone" placeholder="Phone number" maxlength="10" />
+            </div>
+            <div class="form-group">
+                <label>Street / Area</label>
+                <input type="text" id="regStreet" placeholder="e.g. MG Road, Near City Hospital" />
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>State</label>
+                    <select id="regState">
+                        <option value="">Select State</option>
+                        <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option>
+                        <option>Bihar</option><option>Chhattisgarh</option><option>Goa</option><option>Gujarat</option>
+                        <option>Haryana</option><option>Himachal Pradesh</option><option>Jharkhand</option>
+                        <option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option>
+                        <option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option>
+                        <option>Nagaland</option><option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
+                        <option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option>
+                        <option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option>
+                        <option>Delhi</option><option>Jammu and Kashmir</option><option>Ladakh</option>
+                        <option>Chandigarh</option><option>Puducherry</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="regCity" placeholder="e.g. Anantnag" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Pincode</label>
+                <input type="text" id="regPincode" placeholder="6-digit pincode" maxlength="6" />
+            </div>
+        </div>
+
+        <button class="btn" onclick="register()">Create Account</button>
+    </div>
+</div>
+
+<script>
+    if (localStorage.getItem('token')) {
+        window.location.href = 'patient1.html?id=' + localStorage.getItem('patientId');
+    }
+
+    function showTab(tab) {
+    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab')[tab === 'login' ? 0 : 1].classList.add('active');
+
+    document.getElementById('msg').style.display = 'none';
+}
+async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const msg = document.getElementById('msg');
+
+    try {
+        const res = await fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            if (!data.patientId) {
+                msg.textContent = 'No patient profile found for this account. Please contact support or re-register.';
+                msg.className = 'msg error';
+                msg.style.display = 'block';
+                return;
+            }
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('patientId', data.patientId);
+            window.location.href = 'patient1.html?id=' + data.patientId;
+        }
+        else {
+            msg.textContent = data.message;
+            msg.className = 'msg error';
+            msg.style.display = 'block';
+        }
+    } catch (err) {
+        msg.textContent = 'Server error. Is the backend running?';
+        msg.className = 'msg error';
+        msg.style.display = 'block';
+    }
+}
+
+async function register() {
+    
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const age = document.getElementById('regAge').value;
+    const gender = document.getElementById('regGender').value;
+    const condition = document.getElementById('regCondition').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const street = document.getElementById('regStreet').value.trim();
+    const state = document.getElementById('regState').value;
+    const city = document.getElementById('regCity').value.trim();
+    const pincode = document.getElementById('regPincode').value.trim();
+    const msg = document.getElementById('msg');
+
+    function showError(text) {
+        msg.textContent = text;
+        msg.className = 'msg error';
+        msg.style.display = 'block';
+    }
+
+    // Validation
+    // Validation
+if (!name || !email || !password || !age || !gender || !phone ) {
+    showError('Please fill in all required fields.');
+    return;
+}
+
+// Name must be letters and spaces only, minimum 3 characters
+const namePattern = /^[A-Za-z\s]{3,}$/;
+if (!namePattern.test(name)) {
+    showError('Please enter a valid full name (letters only, minimum 3 characters).');
+    return;
+}
+    const phoneDigits = phone.replace(/\D/g, ''); // strip non-digits
+    if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+        showError('Please enter a valid 10-digit Indian mobile number.');
+        return;
+    }
+
+   // Address validation - must contain at least some letters (not just numbers/symbols)
+ // Address validation - must contain at least some letters (not just numbers/symbols)
+if (!street || !state || !city || !pincode) {
+     showError('Please fill in complete address details.');
+     return;
+ }
+
+ // City must be at least 2 letters, only letters/spaces (no numbers/symbols)
+    // City must be at least 3 letters, only letters/spaces (no numbers/symbols)
+const cityPattern = /^[A-Za-z\s]{3,}$/;
+if (!cityPattern.test(city)) {
+    showError('Please enter a valid city name (letters only, minimum 3 characters).');
+    return;
+}
+
+// Street must be at least 6 characters and contain a space (e.g. "MG Road")
+if (street.length < 6 || !street.includes(' ')) {
+    showError('Please enter a complete street/area name (e.g. MG Road, Sector 5).');
+    return;
+}
+    if (!/^\d{6}$/.test(pincode)) {
+        showError('Pincode must be exactly 6 digits.');
+        return;
+    }
+
+    // Password strength - at least 6 chars, must contain a letter and a number
+    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+    if (!passwordPattern.test(password)) {
+        showError('Password must be at least 6 characters and include both letters and numbers.');
+        return;
+    }
+
+    if (age < 0 || age > 120) {
+        showError('Please enter a valid age.');
+        return;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        showError('Please enter a valid email address.');
+        return;
+    }
+
+    
+    const address = `${street}, ${city}, ${state} - ${pincode}`;
+    const body = { name, email, password, age, gender, condition, phone: phoneDigits, address };
+    try {
+        const res = await fetch('http://localhost:5000/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+    showTab('login');
+    msg.textContent = 'Registration successful! Please login.';
+    msg.className = 'msg success';
+    msg.style.display = 'block';
+
+    // Clear the register form for next time
+    ['regName','regEmail','regPassword','regAge','regCondition','regPhone','regStreet','regCity','regPincode'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('regGender').value = '';
+    document.getElementById('regState').value = '';
+} else {
+    showError(data.message);
+}
+    } catch (err) {
+        showError('Server error. Is the backend running?');
+    }
+
+   
+}
+</script>
+</body>
+</html>

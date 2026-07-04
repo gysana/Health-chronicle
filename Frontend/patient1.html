@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Records - Health Chronicle</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a1628, #0d1f3c);
+            color: #e8edf5;
+            min-height: 100vh;
+        }
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 40px;
+            background: rgba(10, 22, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            position: sticky; top: 0; z-index: 10;
+        }
+        .navbar h1 { font-size: 22px; cursor: pointer; color: white; }
+        .navbar h1 span { color: #2c7be5; }
+        .nav-actions { display: flex; gap: 10px; }
+        .nav-btn {
+            padding: 9px 18px; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; font-size: 14px; transition: all 0.2s;
+        }
+        .nav-btn.export { background: rgba(44,123,229,0.15); color: #2c7be5; border: 1px solid rgba(44,123,229,0.4); }
+        .nav-btn.export:hover { background: rgba(44,123,229,0.25); }
+        .nav-btn.logout { background: rgba(220,53,69,0.15); color: #ff6b7a; border: 1px solid rgba(220,53,69,0.4); }
+        .nav-btn.logout:hover { background: rgba(220,53,69,0.25); }
+    
+        .container { padding: 30px 40px; max-width: 1100px; margin: 0 auto; }
+    
+        .patient-hero {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .patient-hero::before {
+            content: '';
+            position: absolute; top: -80px; right: -80px;
+            width: 220px; height: 220px;
+            background: radial-gradient(circle, rgba(44,123,229,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .patient-avatar {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, #2c7be5, #20c997);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: bold; color: white; flex-shrink: 0;
+            z-index: 1;
+        }
+        .patient-hero h2 { font-size: 24px; color: white; margin-bottom: 6px; }
+        .patient-hero p { color: #8899aa; font-size: 14px; margin: 2px 0; }
+    
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; padding: 18px;
+            transition: all 0.2s;
+        }
+        .stat-card:hover { background: rgba(255,255,255,0.07); transform: translateY(-2px); }
+        .stat-icon { font-size: 26px; margin-bottom: 8px; }
+        .stat-label { font-size: 12px; color: #8899aa; margin-bottom: 4px; }
+        .stat-value { font-size: 22px; font-weight: bold; color: white; }
+        .stat-status { font-size: 11px; margin-top: 4px; }
+        .stat-status.normal { color: #20c997; }
+        .stat-status.warning { color: #ffc107; }
+        .stat-status.danger { color: #ff6b7a; }
+    
+        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 16px; color: white; display: flex; align-items: center; gap: 8px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 4px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: bold; color: #a8b8c8; }
+        input, textarea {
+            width: 100%; padding: 10px; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; font-size: 14px; background: rgba(255,255,255,0.05); color: white;
+        }
+        input[type="file"]::-webkit-file-upload-button {
+            background: rgba(44,123,229,0.2);
+            color: #2c7be5;
+            border: 1px solid rgba(44,123,229,0.4);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 12px;
+            transition: all 0.2s;
+        }
+        input[type="file"]::-webkit-file-upload-button:hover {
+            background: rgba(44,123,229,0.3);
+        }
+        input::placeholder, textarea::placeholder { color: #5a6b80; }
+        input:focus, textarea:focus { border-color: #2c7be5; outline: none; }
+        textarea { resize: vertical; height: 80px; }
+    
+        .btn {
+            background: linear-gradient(135deg, #2c7be5, #1a68d1);
+            color: white; padding: 13px 24px; border: none; border-radius: 8px;
+            font-size: 15px; cursor: pointer; margin-top: 16px; width: 100%; font-weight: bold;
+            transition: all 0.2s;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(44,123,229,0.4); }
+    
+        .card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; padding: 22px; margin-bottom: 20px;
+        }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    
+        .alert { background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; color: #ffe08a; padding: 10px 16px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+        .alert.danger { background: rgba(220,53,69,0.1); border-left-color: #ff6b7a; color: #ff9aa5; }
+        .alert.success { background: rgba(32,201,151,0.1); border-left: 4px solid #20c997; color: #6fe0c0; }
+    
+        table { width: 100%; border-collapse: collapse; font-size: 13px; overflow-x: auto; display: block; }
+        th { background: rgba(255,255,255,0.06); padding: 10px; text-align: left; border-bottom: 2px solid rgba(44,123,229,0.4); white-space: nowrap; color: #c8d4e0; font-weight: bold; letter-spacing: 0.3px; }
+        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); white-space: nowrap; color: #d8e0eb; }
+        td.notes-cell { white-space: normal; word-wrap: break-word; max-width: 220px; }
+    
+        .success-msg { background: rgba(32,201,151,0.12); color: #6fe0c0; border: 1px solid rgba(32,201,151,0.3); padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none; }
+        canvas { max-height: 200px; }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 14px 18px; flex-direction: column; gap: 10px; align-items: flex-start; }
+            .container { padding: 20px 16px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .form-grid { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .patient-hero { flex-direction: column; text-align: center; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+        }
+
+        @media (max-width: 420px) {
+            .stats-row { grid-template-columns: 1fr; }
+        }
+
+        body.light-theme {
+            background: linear-gradient(135deg, #f0f4f8, #e2e8f0);
+            color: #1a2332;
+        }
+        body.light-theme #customAlertBox { background: #ffffff; border: 1px solid rgba(0,0,0,0.1); }
+        body.light-theme #customAlertMessage { color: #1a2332; }
+        body.light-theme .navbar { background: rgba(255,255,255,0.95); border-bottom: 1px solid rgba(0,0,0,0.08); }
+        body.light-theme .navbar h1 { color: #1a2332; }
+        body.light-theme .patient-hero,
+        body.light-theme .stat-card,
+        body.light-theme .card { background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08); }
+        body.light-theme .patient-hero h2, body.light-theme .stat-value, body.light-theme .section-title { color: #1a2332; }
+        body.light-theme input, body.light-theme textarea { background: rgba(0,0,0,0.04); color: #1a2332; border: 1px solid rgba(0,0,0,0.15); }
+        body.light-theme th { background: rgba(0,0,0,0.05); color: #1a2332; }
+        body.light-theme td { color: #2a3648; }
+        body.light-theme label { color: #445066; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h1 onclick="window.location.href='index.html'">🏥 Health <span>Chronicle</span></h1>
+        <div class="nav-actions">
+            <button class="nav-btn export" onclick="toggleTheme()">🌓 Theme</button>
+            <button class="nav-btn export" onclick="exportPDF()">📄 Export PDF</button>
+            <button class="nav-btn logout" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+<div class="container">
+
+    <div class="patient-hero" id="patientHero">
+        <div class="patient-avatar" id="patientAvatar">?</div>
+        <div id="patientInfo">
+            <h2>Loading patient...</h2>
+        </div>
+    </div>
+    
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="card">
+        <div class="section-title">📋 Log Health Reading</div>
+        <div class="success-msg" id="successMsg">Health record saved! ✅</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Blood Pressure Systolic (mmHg)</label>
+                <input type="number" id="bpSystolic" placeholder="e.g. 120" />
+            </div>
+            <div class="form-group">
+                <label>Blood Pressure Diastolic (mmHg)</label>
+                <input type="number" id="bpDiastolic" placeholder="e.g. 80" />
+            </div>
+            <div class="form-group">
+                <label>Blood Sugar (mg/dL)</label>
+                <input type="number" id="bloodSugar" placeholder="e.g. 100" />
+            </div>
+            <div class="form-group">
+                <label>Heart Rate (bpm)</label>
+                <input type="number" id="heartRate" placeholder="e.g. 72" />
+            </div>
+            <div class="form-group">
+                <label>Oxygen Level (%)</label>
+                <input type="number" id="oxygenLevel" placeholder="e.g. 98" />
+            </div>
+            <div class="form-group">
+                <label>Temperature (°F)</label>
+                <input type="number" id="temperature" placeholder="e.g. 98.6" />
+            </div>
+            <div class="form-group">
+                <label>Weight (kg)</label>
+                <input type="number" id="weight" placeholder="e.g. 70" />
+            </div>
+            <div class="form-group">
+                <label>Cholesterol (mg/dL)</label>
+                <input type="number" id="cholesterol" placeholder="e.g. 180" />
+            </div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 12px;">
+            <label>Notes / Remarks</label>
+            <textarea id="notes" placeholder="e.g. Patient complained of headache, took medicine at 8am..."></textarea>
+        </div>
+        <button class="btn" onclick="saveRecord()">Save Health Record</button>
+    </div>
+
+    <div id="alertsSection"></div>
+
+    <div class="charts-grid">
+        <div class="card">
+            <div class="section-title">📈 Blood Pressure</div>
+            <canvas id="bpChart"></canvas>
+        </div>
+        <div class="card">
+            <div class="section-title">📈 Blood Sugar</div>
+            <canvas id="sugarChart"></canvas>
+        </div>
+        <div class="card">
+            <div class="section-title">📈 Heart Rate</div>
+            <canvas id="heartChart"></canvas>
+        </div>
+        <div class="card">
+            <div class="section-title">📈 Oxygen Level</div>
+            <canvas id="oxygenChart"></canvas>
+        </div>
+        <div class="card">
+            <div class="section-title">📈 Temperature (°F)</div>
+            <canvas id="tempChart"></canvas>
+        </div>
+        <div class="card">
+            <div class="section-title">📈 Weight (kg)</div>
+            <canvas id="weightChart"></canvas>
+        </div>
+        <div class="card">
+            <div class="section-title">📈 Cholesterol (mg/dL)</div>
+            <canvas id="cholesterolChart"></canvas>
+        </div>
+      
+        <div class="card" id="summaryCard">
+            <div class="section-title">📝 Latest Summary</div>
+            <div id="summaryContent" style="color:#8899aa; font-size:14px; line-height:1.8;">
+                No records yet.
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">📊 Health Records History</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>BP</th>
+                    <th>Sugar</th>
+                    <th>Heart Rate</th>
+                    <th>Oxygen</th>
+                    <th>Temp</th>
+                    <th>Weight</th>
+                    <th>Cholesterol</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody id="recordsBody">
+                <tr><td colspan="9">No records yet</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <div class="section-title">📁 Medical Documents</div>
+        <div class="success-msg" id="docSuccessMsg">Document uploaded! ✅</div>
+        <div class="success-msg" id="docErrorMsg" style="background: rgba(220,53,69,0.12); color: #ff9aa5; border: 1px solid rgba(220,53,69,0.3);"></div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Document Description</label>
+                <input type="text" id="docDescription" placeholder="e.g. Blood Test Report, X-Ray, Prescription" />
+            </div>
+            <div class="form-group">
+                <label>Document Date</label>
+                <input type="date" id="docDate" />
+            </div>
+        </div>
+        <div class="form-group" style="margin-top: 12px;">
+            <label>Select File (Image or PDF)</label>
+            <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png" />
+        </div>
+        <button class="btn" onclick="uploadDocument()">📤 Upload Document</button>
+        <div id="documentsList" style="margin-top: 24px;"></div>
+    </div>
+
+</div>
+<div style="text-align:center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08);">
+    <button onclick="openDeleteModal()" style="background:none; border:none; color:#ff6b7a; font-size:13px; cursor:pointer; text-decoration:underline; opacity:0.7;">
+        🗑️ Delete My Account
+    </button>
+</div>
+<div id="deleteModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center;">
+    <div style="background:#0d1526; border:1px solid rgba(220,53,69,0.4); border-radius:16px; padding:32px; max-width:400px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <h3 style="color:#ff6b7a; margin-bottom:12px;">⚠️ Delete Account</h3>
+        <p style="color:#a8b8c8; font-size:14px; margin-bottom:20px; line-height:1.6;">
+            This will permanently delete your account, patient profile, health records, and documents. This cannot be undone.
+        </p>
+        <label style="display:block; margin-bottom:6px; font-size:13px; font-weight:bold; color:#a8b8c8;">Enter your password to confirm</label>
+        <input type="password" id="deletePasswordInput" placeholder="Your password" style="width:100%; padding:10px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; font-size:14px; background:rgba(255,255,255,0.05); color:white; margin-bottom:8px;" />
+        <div id="deleteErrorMsg" style="color:#ff9aa5; font-size:13px; margin-bottom:12px; display:none;"></div>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button onclick="closeDeleteModal()" style="flex:1; padding:11px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Cancel</button>
+            <button onclick="confirmDeleteAccount()" style="flex:1; padding:11px; border:none; background:#dc3545; color:white; border-radius:8px; cursor:pointer; font-weight:bold;">Delete Forever</button>
+        </div>
+    </div>
+</div>
+<div id="customAlertModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center;">
+    <div style="background:#0d1526; border:1px solid rgba(44,123,229,0.4); border-radius:16px; padding:28px; max-width:380px; width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.5); text-align:center;" id="customAlertBox">
+        <div style="font-size:32px; margin-bottom:12px;" id="customAlertIcon">⚠️</div>
+        <p id="customAlertMessage" style="color:#d8e0eb; font-size:15px; margin-bottom:20px; line-height:1.5;"></p>
+        <button onclick="closeCustomAlert()" style="background:linear-gradient(135deg, #2c7be5, #1a68d1); color:white; padding:11px 28px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:14px;">OK</button>
+    </div>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const patientId = params.get('id');
+
+    function showAlert(message) {
+        document.getElementById('customAlertMessage').textContent = message;
+        document.getElementById('customAlertModal').style.display = 'flex';
+    }
+    function closeCustomAlert() {
+        document.getElementById('customAlertModal').style.display = 'none';
+    }
+
+    async function loadPatient() {
+        try {
+            const res = await fetch('http://localhost:5000/api/patients/all', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            const patients = await res.json();
+            const patient = patients.find(p => p._id === patientId);
+            if (patient) {
+                document.getElementById('patientAvatar').textContent = patient.name.charAt(0).toUpperCase();
+                document.getElementById('patientInfo').innerHTML = `
+                    <h2>${patient.name}</h2>
+                    <p>Age: ${patient.age} | Gender: ${patient.gender}</p>
+                    <p>Condition: ${patient.condition}</p>
+                    <p>Phone: ${patient.phone || 'N/A'}</p>
+                `;
+            }
+        } catch (e) { console.log('Error loading patient', e); }
+    }
+
+    async function saveRecord() {
+        const allFields = ['bpSystolic','bpDiastolic','bloodSugar','heartRate','oxygenLevel','temperature','weight','cholesterol'];
+        const allEmpty = allFields.every(id => document.getElementById(id).value.trim() === '');
+        if (allEmpty) {
+            showAlert('Please enter at least one health reading before saving.');
+            return;
+        }
+
+        for (const id of allFields) {
+            const val = document.getElementById(id).value;
+            if (val !== '' && isNaN(Number(val))) {
+                showAlert('Please enter valid numbers only — letters or symbols are not allowed.');
+                return;
+            }
+        }
+
+        const bpSys = document.getElementById('bpSystolic').value;
+        const bpDia = document.getElementById('bpDiastolic').value;
+        const sugar = document.getElementById('bloodSugar').value;
+        const hr = document.getElementById('heartRate').value;
+        const oxy = document.getElementById('oxygenLevel').value;
+        const temp = document.getElementById('temperature').value;
+        const weightVal = document.getElementById('weight').value;
+        const chol = document.getElementById('cholesterol').value;
+
+        if (bpSys !== '' && (Number(bpSys) < 50 || Number(bpSys) > 250)) {
+            showAlert('Please enter a realistic Systolic BP between 50 and 250 mmHg.');
+            return;
+        }
+        if (bpDia !== '' && (Number(bpDia) < 30 || Number(bpDia) > 150)) {
+            showAlert('Please enter a realistic Diastolic BP between 30 and 150 mmHg.');
+            return;
+        }
+        if (sugar !== '' && (Number(sugar) < 20 || Number(sugar) > 600)) {
+            showAlert('Please enter a realistic Blood Sugar between 20 and 600 mg/dL.');
+            return;
+        }
+        if (hr !== '' && (Number(hr) < 20 || Number(hr) > 250)) {
+            showAlert('Please enter a realistic Heart Rate between 20 and 250 bpm.');
+            return;
+        }
+        if (oxy !== '' && (Number(oxy) < 30 || Number(oxy) > 100)) {
+            showAlert('Please enter a realistic Oxygen Level between 30 and 100%.');
+            return;
+        }
+        if (temp !== '' && (Number(temp) < 85 || Number(temp) > 110)) {
+            showAlert('Please enter a realistic Temperature between 85 and 110°F.');
+            return;
+        }
+        if (weightVal !== '' && (Number(weightVal) < 2 || Number(weightVal) > 300)) {
+            showAlert('Please enter a realistic weight between 2 and 300 kg.');
+            return;
+        }
+        if (chol !== '' && (Number(chol) < 50 || Number(chol) > 600)) {
+            showAlert('Please enter a realistic Cholesterol between 50 and 600 mg/dL.');
+            return;
+        }
+
+        const record = {
+            patientId,
+            bloodPressureSystolic: bpSys,
+            bloodPressureDiastolic: bpDia,
+            bloodSugar: sugar,
+            heartRate: hr,
+            oxygenLevel: oxy,
+            temperature: temp,
+            weight: weightVal,
+            cholesterol: chol,
+            notes: document.getElementById('notes').value,
+        };
+
+        const saveBtn = document.querySelector('button[onclick="saveRecord()"]');
+        saveBtn.textContent = '⏳ Saving...';
+        saveBtn.disabled = true;
+
+        try {
+            const res = await fetch('http://localhost:5000/api/health/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(record)
+            });
+            if (res.ok) {
+                document.getElementById('successMsg').style.display = 'block';
+                setTimeout(() => { document.getElementById('successMsg').style.display = 'none'; }, 2000);
+
+                const newAlerts = checkAbnormal(record, null);
+                if (newAlerts.length > 0) {
+                    playAlertSound();
+                }
+
+                ['bpSystolic','bpDiastolic','bloodSugar','heartRate','oxygenLevel','temperature','weight','cholesterol','notes'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                loadRecords();
+            } else {
+                showAlert('Failed to save record. Please try again.');
+            }
+        } catch (e) {
+            showAlert('Error saving record!');
+        } finally {
+            saveBtn.textContent = 'Save Health Record';
+            saveBtn.disabled = false;
+        }
+    }
+
+    function playAlertSound() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 880;
+            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+
+            oscillator.start();
+            oscillator.stop(ctx.currentTime + 0.3);
+
+            setTimeout(() => {
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.value = 880;
+                gain2.gain.setValueAtTime(0.3, ctx.currentTime);
+                osc2.start();
+                osc2.stop(ctx.currentTime + 0.3);
+            }, 400);
+        } catch (e) {
+            console.log('Could not play alert sound:', e);
+        }
+    }
+
+    function checkAbnormal(record, previousRecord) {
+        const alerts = [];
+
+        const has = (val) => val !== undefined && val !== null && val !== '';
+        const num = (val) => Number(val);
+
+        if (has(record.bloodPressureSystolic)) {
+            const bp = num(record.bloodPressureSystolic);
+            if (bp > 140) alerts.push('⚠️ High Blood Pressure (Systolic > 140 mmHg)');
+            else if (bp < 90) alerts.push('⚠️ Low Blood Pressure (Systolic < 90 mmHg)');
+        }
+
+        if (has(record.bloodSugar)) {
+            const sugar = num(record.bloodSugar);
+            if (sugar > 180) alerts.push('⚠️ High Blood Sugar (> 180 mg/dL)');
+            else if (sugar < 70) alerts.push('⚠️ Low Blood Sugar (< 70 mg/dL)');
+        }
+
+        if (has(record.heartRate)) {
+            const hr = num(record.heartRate);
+            if (hr > 100) alerts.push('⚠️ High Heart Rate (> 100 bpm)');
+            else if (hr < 60) alerts.push('⚠️ Low Heart Rate (< 60 bpm)');
+        }
+
+        if (has(record.oxygenLevel)) {
+            const oxy = num(record.oxygenLevel);
+            if (oxy < 95) alerts.push('🚨 Low Oxygen Level (< 95%)');
+        }
+
+        if (has(record.temperature)) {
+            const temp = num(record.temperature);
+            if (temp > 100.4) alerts.push('⚠️ Fever Detected (> 100.4°F)');
+            else if (temp <= 95) alerts.push('🚨 Low Body Temperature / Hypothermia Risk (≤ 95°F)');
+        }
+
+        if (has(record.cholesterol)) {
+            const chol = num(record.cholesterol);
+            if (chol > 200) alerts.push('⚠️ High Cholesterol (> 200 mg/dL)');
+        }
+
+        if (has(record.weight)) {
+            const w = num(record.weight);
+            if (w < 2 || w > 300) alerts.push('⚠️ Weight value looks unusual — please verify');
+        }
+
+        if (previousRecord) {
+            if (has(record.weight) && has(previousRecord.weight)) {
+                const diff = Math.abs(num(record.weight) - num(previousRecord.weight));
+                if (diff >= 3) alerts.push(`⚠️ Sudden Weight Change (${diff.toFixed(1)} kg since last reading)`);
+            }
+
+            if (has(record.bloodPressureSystolic) && has(previousRecord.bloodPressureSystolic)) {
+                const diff = Math.abs(num(record.bloodPressureSystolic) - num(previousRecord.bloodPressureSystolic));
+                if (diff >= 30) alerts.push(`⚠️ Sudden BP Change (${diff} mmHg since last reading)`);
+            }
+
+            if (has(record.heartRate) && has(previousRecord.heartRate)) {
+                const diff = Math.abs(num(record.heartRate) - num(previousRecord.heartRate));
+                if (diff >= 30) alerts.push(`⚠️ Sudden Heart Rate Change (${diff} bpm since last reading)`);
+            }
+
+            if (has(record.bloodSugar) && has(previousRecord.bloodSugar)) {
+                const diff = Math.abs(num(record.bloodSugar) - num(previousRecord.bloodSugar));
+                if (diff >= 50) alerts.push(`⚠️ Sudden Blood Sugar Change (${diff} mg/dL since last reading)`);
+            }
+
+            if (has(record.oxygenLevel) && has(previousRecord.oxygenLevel)) {
+                const diff = Math.abs(num(record.oxygenLevel) - num(previousRecord.oxygenLevel));
+                if (diff >= 8) alerts.push(`🚨 Sudden Oxygen Drop/Rise (${diff}% since last reading)`);
+            }
+        }
+
+        return alerts;
+    }
+
+    function renderQuickStats(latest) {
+        const statsRow = document.getElementById('statsRow');
+        if (!latest) { statsRow.innerHTML = ''; return; }
+
+        const bpStatus = (latest.bloodPressureSystolic > 140 || latest.bloodPressureSystolic < 90) ? 'danger' : 'normal';
+        const sugarStatus = (latest.bloodSugar > 180 || latest.bloodSugar < 70) ? 'danger' : 'normal';
+        const heartStatus = (latest.heartRate > 100 || latest.heartRate < 60) ? 'warning' : 'normal';
+        const oxyStatus = (latest.oxygenLevel < 95) ? 'danger' : 'normal';
+
+        statsRow.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-icon">❤️</div>
+                <div class="stat-label">Heart Rate</div>
+                <div class="stat-value">${latest.heartRate || '--'} <small style="font-size:13px;">bpm</small></div>
+                <div class="stat-status ${heartStatus}">● ${heartStatus === 'normal' ? 'Normal' : 'Check'}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🩸</div>
+                <div class="stat-label">Blood Pressure</div>
+                <div class="stat-value">${latest.bloodPressureSystolic || '--'}/${latest.bloodPressureDiastolic || '--'}</div>
+                <div class="stat-status ${bpStatus}">● ${bpStatus === 'normal' ? 'Normal' : 'High/Low'}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🍬</div>
+                <div class="stat-label">Blood Sugar</div>
+                <div class="stat-value">${latest.bloodSugar || '--'} <small style="font-size:13px;">mg/dL</small></div>
+                <div class="stat-status ${sugarStatus}">● ${sugarStatus === 'normal' ? 'Normal' : 'Abnormal'}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🫁</div>
+                <div class="stat-label">Oxygen Level</div>
+                <div class="stat-value">${latest.oxygenLevel || '--'}<small style="font-size:13px;">%</small></div>
+                <div class="stat-status ${oxyStatus}">● ${oxyStatus === 'normal' ? 'Normal' : 'Low'}</div>
+            </div>
+        `;
+    }
+
+    function renderSummary(records) {
+        const el = document.getElementById('summaryContent');
+        if (!records || records.length === 0) {
+            el.innerHTML = 'No records yet.';
+            return;
+        }
+        const latest = records[0];
+        const latestDate = new Date(latest.recordedAt).toLocaleDateString('en-IN');
+        const previous = records.length > 1 ? records[1] : null;
+        const alerts = checkAbnormal(latest, previous);
+
+        el.innerHTML = `
+            <p><strong style="color:white;">Total Records:</strong> ${records.length}</p>
+            <p><strong style="color:white;">Last Logged:</strong> ${latestDate}</p>
+            <p><strong style="color:white;">Status:</strong> ${alerts.length > 0 ? `<span style="color:#ff9aa5;">${alerts.length} abnormal reading(s)</span>` : `<span style="color:#6fe0c0;">All readings normal</span>`}</p>
+            ${latest.notes ? `<p style="margin-top:8px;"><strong style="color:white;">Notes:</strong> ${latest.notes}</p>` : ''}
+        `;
+    }
+
+    let charts = {};
+
+    function getChartTextColor() {
+        return document.body.classList.contains('light-theme') ? '#1a2332' : '#d8e0eb';
+    }
+    function getChartGridColor() {
+        return document.body.classList.contains('light-theme') ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)';
+    }
+
+    function createChart(id, label, data, labels, color) {
+        if (charts[id]) charts[id].destroy();
+        const textColor = getChartTextColor();
+        const gridColor = getChartGridColor();
+        charts[id] = new Chart(document.getElementById(id), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{ label, data, borderColor: color, backgroundColor: color + '30', tension: 0.3, fill: true, pointRadius: 5, pointBackgroundColor: color, borderWidth: 3 }]
+            },
+            options: {
+                plugins: { legend: { display: true, labels: { color: textColor } } },
+                scales: {
+                    y: { beginAtZero: false, ticks: { color: textColor }, grid: { color: gridColor } },
+                    x: { ticks: { color: textColor }, grid: { color: gridColor } }
+                }
+            }
+        });
+    }
+
+    function createBPChart(labels, systolic, diastolic) {
+        if (charts['bpChart']) charts['bpChart'].destroy();
+        const textColor = getChartTextColor();
+        const gridColor = getChartGridColor();
+        charts['bpChart'] = new Chart(document.getElementById('bpChart'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Systolic', data: systolic, borderColor: '#dc3545', backgroundColor: '#dc354530', tension: 0.3, fill: false, pointRadius: 5, pointBackgroundColor: '#dc3545', borderWidth: 3 },
+                    { label: 'Diastolic', data: diastolic, borderColor: '#20c997', backgroundColor: '#20c99730', tension: 0.3, fill: false, pointRadius: 5, pointBackgroundColor: '#20c997', borderWidth: 3 }
+                ]
+            },
+            options: {
+                plugins: { legend: { display: true, labels: { color: textColor } } },
+                scales: {
+                    y: { beginAtZero: false, ticks: { color: textColor }, grid: { color: gridColor } },
+                    x: { ticks: { color: textColor }, grid: { color: gridColor } }
+                }
+            }
+        });
+    }
+
+    async function loadRecords() {
+        try {
+            const res = await fetch(`http://localhost:5000/api/health/${patientId}`);
+            const records = await res.json();
+
+            const alertsDiv = document.getElementById('alertsSection');
+            renderSummary(records);
+            if (records.length > 0) {
+                const latest = records[0];
+                const previous = records.length > 1 ? records[1] : null;
+                const alerts = checkAbnormal(latest, previous);
+                renderQuickStats(latest);
+                if (alerts.length > 0) {
+                    alertsDiv.innerHTML = alerts.map(a => `<div class="alert danger">${a} — Please consult a doctor!</div>`).join('');
+                } else {
+                    alertsDiv.innerHTML = '<div class="alert success">✅ All latest readings are normal!</div>';
+                }
+            }
+
+            const tbody = document.getElementById('recordsBody');
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9">No records yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = records.map(r => {
+                const date = new Date(r.recordedAt).toLocaleDateString('en-IN');
+                const bp = r.bloodPressureSystolic ? `${r.bloodPressureSystolic}/${r.bloodPressureDiastolic}` : 'N/A';
+                const bpClass = r.bloodPressureSystolic > 140 || r.bloodPressureSystolic < 90 ? 'abnormal' : '';
+                const sugarClass = r.bloodSugar > 180 || r.bloodSugar < 70 ? 'abnormal' : '';
+                const oxygenClass = r.oxygenLevel < 95 ? 'abnormal' : '';
+                const cholClass = r.cholesterol > 200 ? 'abnormal' : '';
+                return `<tr>
+                    <td>${date}</td>
+                    <td class="${bpClass}">${bp}</td>
+                    <td class="${sugarClass}">${r.bloodSugar || 'N/A'}</td>
+                    <td>${r.heartRate || 'N/A'}</td>
+                    <td class="${oxygenClass}">${r.oxygenLevel || 'N/A'}</td>
+                    <td>${r.temperature || 'N/A'}</td>
+                    <td>${r.weight || 'N/A'}</td>
+                    <td class="${cholClass}">${r.cholesterol || 'N/A'}</td>
+                    <td class="notes-cell">${r.notes || '-'}</td>
+                </tr>`;
+            }).join('');
+
+            const labels = records.map(r => new Date(r.recordedAt).toLocaleDateString('en-IN')).reverse();
+            createBPChart(labels, records.map(r => r.bloodPressureSystolic).reverse(), records.map(r => r.bloodPressureDiastolic).reverse());
+            createChart('sugarChart', 'Blood Sugar', records.map(r => r.bloodSugar).reverse(), labels, '#fd7e14');
+            createChart('heartChart', 'Heart Rate', records.map(r => r.heartRate).reverse(), labels, '#e83e8c');
+            createChart('oxygenChart', 'Oxygen Level', records.map(r => r.oxygenLevel).reverse(), labels, '#20c997');
+            createChart('tempChart', 'Temperature', records.map(r => r.temperature).reverse(), labels, '#6f42c1');
+            createChart('weightChart', 'Weight', records.map(r => r.weight).reverse(), labels, '#17a2b8');
+            createChart('cholesterolChart', 'Cholesterol', records.map(r => r.cholesterol).reverse(), labels, '#ffc107');
+
+        } catch (e) { console.log('Error loading records', e); }
+    }
+
+    async function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const patientInfo = document.getElementById('patientInfo');
+        const patientName = patientInfo.querySelector('h2').innerText;
+        const patientDetails = patientInfo.querySelectorAll('p');
+        doc.setFillColor(44, 123, 229);
+        doc.rect(0, 0, 210, 35, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.text('Health Chronicle', 14, 15);
+        doc.setFontSize(11);
+        doc.text('Patient Health Report', 14, 25);
+        doc.text('Generated: ' + new Date().toLocaleDateString('en-IN'), 140, 25);
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(14);
+        doc.text(patientName, 14, 50);
+        doc.setFontSize(10);
+        let y = 58;
+        patientDetails.forEach(p => { doc.text(p.innerText, 14, y); y += 7; });
+        const rows = [];
+        document.querySelectorAll('#recordsBody tr').forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length > 1) rows.push(Array.from(cells).map(c => c.innerText));
+        });
+        doc.autoTable({
+            startY: y + 5,
+            head: [['Date', 'BP', 'Sugar', 'Heart Rate', 'Oxygen', 'Temp', 'Weight', 'Cholesterol', 'Notes']],
+            body: rows,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [44, 123, 229] },
+        });
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setFontSize(9);
+        doc.setTextColor(150);
+        doc.text('Generated by Health Chronicle — For doctor consultation only', 14, pageHeight - 10);
+        doc.save(`${patientName}_health_report.pdf`);
+    }
+
+    async function uploadDocument() {
+    const file = document.getElementById('docFile').files[0];
+    const description = document.getElementById('docDescription').value.trim();
+    const documentDate = document.getElementById('docDate').value;
+    const errorMsg = document.getElementById('docErrorMsg');
+
+    function showDocError(text) {
+        errorMsg.textContent = text;
+        errorMsg.style.display = 'block';
+        errorMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => { errorMsg.style.display = 'none'; }, 3500);
+    }
+
+    if (!description) { showDocError('Please enter a document description (e.g. Blood Test Report).'); return; }
+    if (!documentDate) { showDocError('Please select a document date.'); return; }
+    if (!file) { showDocError('Please select a file!'); return; }
+
+    const uploadBtn = document.querySelector('button[onclick="uploadDocument()"]');
+    uploadBtn.textContent = '⏳ Uploading...';
+    uploadBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('document', file);
+    formData.append('patientId', patientId);
+    formData.append('description', description);
+    formData.append('documentDate', documentDate);
+
+    try {
+        const res = await fetch('http://localhost:5000/api/documents/upload', {
+            method: 'POST',
+            body: formData
+        });
+        if (res.ok) {
+            const msg = document.getElementById('docSuccessMsg');
+            msg.style.display = 'block';
+            msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => { msg.style.display = 'none'; }, 3500);
+
+            document.getElementById('docFile').value = '';
+            document.getElementById('docDescription').value = '';
+            document.getElementById('docDate').value = '';
+            loadDocuments();
+        } else {
+            showDocError('Upload failed. Please try again.');
+        }
+    } catch (e) {
+        showDocError('Error uploading document!');
+    } finally {
+        uploadBtn.textContent = '📤 Upload Document';
+        uploadBtn.disabled = false;
+    }
+}
+    async function loadDocuments() {
+        try {
+            const res = await fetch(`http://localhost:5000/api/documents/${patientId}`);
+            const docs = await res.json();
+            const container = document.getElementById('documentsList');
+            if (docs.length === 0) {
+                container.innerHTML = '<p style="color:#8899aa;">No documents uploaded yet.</p>';
+                return;
+            }
+            container.innerHTML = docs.map(doc => {
+                const date = doc.documentDate ? new Date(doc.documentDate).toLocaleDateString('en-IN') : 'N/A';
+                const isImage = doc.fileType && doc.fileType.startsWith('image/');
+                const isPDF = doc.fileType === 'application/pdf';
+                const fileUrl = `http://localhost:5000/uploads/${doc.filename}`;
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
+                        <div>
+                            <div style="font-weight:bold; margin-bottom:4px; color:white;">
+                                ${isImage ? '🖼️' : isPDF ? '📄' : '📎'} ${doc.description || doc.originalName}
+                            </div>
+                            <div style="font-size:12px; color:#8899aa;">Date: ${date} | File: ${doc.originalName}</div>
+                        </div>
+                        <a href="${fileUrl}" target="_blank" style="background:#2c7be5; color:white; padding:8px 16px; border-radius:6px; text-decoration:none; font-size:13px;">View</a>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) { console.log('Error loading documents', e); }
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-theme');
+        const isLight = document.body.classList.contains('light-theme');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        loadRecords();
+    }
+
+    function applyStoredTheme() {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'light') {
+            document.body.classList.add('light-theme');
+        }
+    }
+
+    window.onload = () => {
+        applyStoredTheme();
+        loadPatient();
+        loadRecords();
+        loadDocuments();
+    };
+
+    function openDeleteModal() {
+        document.getElementById('deletePasswordInput').value = '';
+        document.getElementById('deleteErrorMsg').style.display = 'none';
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    async function confirmDeleteAccount() {
+        const password = document.getElementById('deletePasswordInput').value;
+        const errorMsg = document.getElementById('deleteErrorMsg');
+        const deleteBtn = document.querySelector('#deleteModal button[onclick="confirmDeleteAccount()"]');
+
+        if (!password) {
+            errorMsg.textContent = 'Please enter your password.';
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        deleteBtn.textContent = '⏳ Deleting...';
+        deleteBtn.disabled = true;
+
+        try {
+            const res = await fetch('http://localhost:5000/api/auth/delete', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify({ password })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                deleteBtn.textContent = '✅ Deleted';
+                setTimeout(() => {
+                    localStorage.clear();
+                    window.location.href = 'landing.html';
+                }, 2000);
+            } else {
+                errorMsg.textContent = data.message;
+                errorMsg.style.display = 'block';
+                deleteBtn.textContent = 'Delete Forever';
+                deleteBtn.disabled = false;
+            }
+        } catch (e) {
+            errorMsg.textContent = 'Error connecting to server.';
+            errorMsg.style.display = 'block';
+            deleteBtn.textContent = 'Delete Forever';
+            deleteBtn.disabled = false;
+        }
+    }
+
+    function logout() {
+        const btn = event.target;
+        btn.textContent = '⏳ Logging out...';
+        btn.disabled = true;
+        setTimeout(() => {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
