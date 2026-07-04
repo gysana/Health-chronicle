@@ -17,6 +17,17 @@ Incorrect or incomplete health data leads to poor treatment decisions. Health Ch
 - 📁 **Medical Document Upload** — Attach and store scanned reports, prescriptions, and X-rays with dates and descriptions
 - 🎨 **Modern Dashboard UI** — Dark, futuristic interface with live ECG-style animation
 
+## 📸 Screenshots
+
+<img width="1890" height="857" alt="Screenshot 1" src="https://github.com/user-attachments/assets/e0f5b91e-6ba1-4c32-b142-09ce9a2d47f8" />
+<img width="1865" height="807" alt="Screenshot 2" src="https://github.com/user-attachments/assets/f572c67c-f030-46d2-949f-dc2f5f942ffe" />
+<img width="835" height="773" alt="Screenshot 3" src="https://github.com/user-attachments/assets/69025bce-ce05-4f73-913a-bce2f8f432f2" />
+<img width="1097" height="855" alt="Screenshot 4" src="https://github.com/user-attachments/assets/09c58cc3-7b96-4583-bc9f-595dbbf5c86a" />
+<img width="1505" height="761" alt="Screenshot 5" src="https://github.com/user-attachments/assets/148c9499-7c4f-448a-968c-2f2d56c38b18" />
+<img width="1672" height="702" alt="Screenshot 6" src="https://github.com/user-attachments/assets/54ec218d-00ea-4152-9bc4-549f4defb3d3" />
+<img width="1500" height="780" alt="Screenshot 7" src="https://github.com/user-attachments/assets/0a1f1c00-ced9-47e0-aa18-d00ac40cf590" />
+<img width="916" height="222" alt="Screenshot 8" src="https://github.com/user-attachments/assets/7d77ba04-d9f8-41b0-92ec-3a0fb53de41d" />
+
 ## 🛠️ Tech Stack
 
 **Frontend:** HTML5, CSS3, Vanilla JavaScript, Chart.js, jsPDF
@@ -26,7 +37,9 @@ Incorrect or incomplete health data leads to poor treatment decisions. Health Ch
 **File Uploads:** Multer
 
 ## 📂 Project Structure
- HealthChronicle/
+
+```
+HealthChronicle/
 ├── Backend/
 │   ├── server.js
 │   ├── database.js
@@ -34,10 +47,12 @@ Incorrect or incomplete health data leads to poor treatment decisions. Health Ch
 │   ├── routes/
 │   └── uploads/
 └── Frontend/
-├── landing.html
-├── login.html
-├── index.html
-└── patient1.html
+    ├── landing.html
+    ├── login.html
+    ├── index.html
+    └── patient1.html
+```
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -58,9 +73,12 @@ npm install
 ```
 
 3. Create a `.env` file in the Backend folder
+```
 MONGO_URI=your_mongodb_atlas_connection_string
 JWT_SECRET=your_secret_key
 PORT=5000
+```
+
 4. Start the backend server
 ```bash
 node server.js
@@ -82,61 +100,3 @@ node server.js
 ## 📄 License
 
 This project is for educational purposes.
-## 📸 Screenshots
-<img width="1890" height="857" alt="Screenshot 2026-07-04 174640" src="https://github.com/user-attachments/assets/e0f5b91e-6ba1-4c32-b142-09ce9a2d47f8" />
-<img width="1865" height="807" alt="Screenshot 2026-07-04 174712" src="https://github.com/user-attachments/assets/f572c67c-f030-46d2-949f-dc2f5f942ffe" />
-<img width="835" height="773" alt="Screenshot 2026-07-04 174724" src="https://github.com/user-attachments/assets/69025bce-ce05-4f73-913a-bce2f8f432f2" />
-<img width="1097" height="855" alt="Screenshot 2026-07-04 174742" src="https://github.com/user-attachments/assets/09c58cc3-7b96-4583-bc9f-595dbbf5c86a" />
-<img width="1505" height="761" alt="Screenshot 2026-07-02 163400" src="https://github.com/user-attachments/assets/148c9499-7c4f-448a-968c-2f2d56c38b18" />
-<img width="1672" height="702" alt="Screenshot 2026-07-01 182931" src="https://github.com/user-attachments/assets/54ec218d-00ea-4152-9bc4-549f4defb3d3" />
-<img width="1500" height="780" alt="Screenshot 2026-07-03 164540" src="https://github.com/user-attachments/assets/0a1f1c00-ced9-47e0-aa18-d00ac40cf590" />
-<img width="916" height="222" alt="Screenshot 2026-07-02 183749" src="https://github.com/user-attachments/assets/7d77ba04-d9f8-41b0-92ec-3a0fb53de41d" />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
