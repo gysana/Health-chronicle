@@ -449,6 +449,12 @@
             cholesterol: chol,
             notes: document.getElementById('notes').value,
         };
+        const hasSystolic = record.bloodPressureSystolic !== '';
+    const hasDiastolic = record.bloodPressureDiastolic !== '';
+    if (hasSystolic !== hasDiastolic) {
+        alert('Please enter both Systolic and Diastolic values together, or leave both blank.');
+        return;
+    }
 
         const saveBtn = document.querySelector('button[onclick="saveRecord()"]');
         saveBtn.textContent = '⏳ Saving...';
