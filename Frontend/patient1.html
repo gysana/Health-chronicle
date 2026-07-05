@@ -165,6 +165,19 @@
         body.light-theme th { background: rgba(0,0,0,0.05); color: #1a2332; }
         body.light-theme td { color: #2a3648; }
         body.light-theme label { color: #445066; }
+        .doc-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+.doc-card .doc-title { color: white; }
+.doc-card .doc-meta { color: #8899aa; }
+
+body.light-theme .doc-card {
+    background: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.08);
+}
+body.light-theme .doc-card .doc-title { color: #1a2332; }
+body.light-theme .doc-card .doc-meta { color: #445066; }
     </style>
 </head>
 <body>
@@ -861,22 +874,22 @@
                 return;
             }
             container.innerHTML = docs.map(doc => {
-                const date = doc.documentDate ? new Date(doc.documentDate).toLocaleDateString('en-IN') : 'N/A';
-                const isImage = doc.fileType && doc.fileType.startsWith('image/');
-                const isPDF = doc.fileType === 'application/pdf';
-                const fileUrl = `https://health-chronicle.onrender.com/uploads/${doc.filename}`;
-                return `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
-                        <div>
-                            <div style="font-weight:bold; margin-bottom:4px; color:white;">
-                                ${isImage ? '🖼️' : isPDF ? '📄' : '📎'} ${doc.description || doc.originalName}
-                            </div>
-                            <div style="font-size:12px; color:#8899aa;">Date: ${date} | File: ${doc.originalName}</div>
-                        </div>
-                        <a href="${fileUrl}" target="_blank" style="background:#2c7be5; color:white; padding:8px 16px; border-radius:6px; text-decoration:none; font-size:13px;">View</a>
-                    </div>
-                `;
-            }).join('');
+    const date = doc.documentDate ? new Date(doc.documentDate).toLocaleDateString('en-IN') : 'N/A';
+    const isImage = doc.fileType && doc.fileType.startsWith('image/');
+    const isPDF = doc.fileType === 'application/pdf';
+    const fileUrl = `https://health-chronicle.onrender.com/uploads/${doc.filename}`;
+    return `
+        <div class="doc-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-radius:8px; margin-bottom:8px;">
+            <div>
+                <div class="doc-title" style="font-weight:bold; margin-bottom:4px;">
+                    ${isImage ? '🖼️' : isPDF ? '📄' : '📎'} ${doc.description || doc.originalName}
+                </div>
+                <div class="doc-meta" style="font-size:12px;">Date: ${date} | File: ${doc.originalName}</div>
+            </div>
+            <a href="${fileUrl}" target="_blank" style="background:#2c7be5; color:white; padding:8px 16px; border-radius:6px; text-decoration:none; font-size:13px;">View</a>
+        </div>
+    `;
+}).join('');
         } catch (e) { console.log('Error loading documents', e); }
     }
 
