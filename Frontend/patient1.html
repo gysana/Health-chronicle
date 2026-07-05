@@ -170,7 +170,9 @@
     border: 1px solid rgba(255,255,255,0.08);
 }
 .doc-card .doc-title { color: white; }
-.doc-card .doc-meta { color: #8899aa; }
+.doc-card .doc-meta { color: #8899aa;}
+    .summary-label { color: white; }
+    body.light-theme .summary-label { color: #1a2332;  }
 
 body.light-theme .doc-card {
     background: rgba(0,0,0,0.03);
@@ -658,10 +660,10 @@ body.light-theme .doc-card .doc-meta { color: #445066; }
         const alerts = checkAbnormal(latest, previous);
 
         el.innerHTML = `
-            <p><strong style="color:white;">Total Records:</strong> ${records.length}</p>
-            <p><strong style="color:white;">Last Logged:</strong> ${latestDate}</p>
-            <p><strong style="color:white;">Status:</strong> ${alerts.length > 0 ? `<span style="color:#ff9aa5;">${alerts.length} abnormal reading(s)</span>` : `<span style="color:#6fe0c0;">All readings normal</span>`}</p>
-            ${latest.notes ? `<p style="margin-top:8px;"><strong style="color:white;">Notes:</strong> ${latest.notes}</p>` : ''}
+            <p><strong class="summary-label">Total Records:</strong> ${records.length}</p>
+            <p><strong class="summary-label">Last Logged:</strong> ${latestDate}</p>
+            <p><strong class="summary-label">Status:</strong> ${alerts.length > 0 ? `<span style="color:#ff9aa5;">${alerts.length} abnormal reading(s)</span>` : `<span style="color:#6fe0c0;">All readings normal</span>`}</p>
+            ${latest.notes ? `<p style="margin-top:8px;"><strong class="summary-label">Notes:</strong> ${latest.notes}</p>` : ''}
         `;
     }
 
