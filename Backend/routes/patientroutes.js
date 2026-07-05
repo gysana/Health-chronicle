@@ -3,7 +3,7 @@ const router = express.Router();
 const Patient = require('../models/patient');
 const jwt = require('jsonwebtoken');
 
-const SECRET = 'healthchronicle_secret_key';
+const SECRET = process.env.JWT_SECRET;
 
 function getUserId(req) {
   try {
