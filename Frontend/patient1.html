@@ -362,7 +362,7 @@
 
     async function loadPatient() {
         try {
-            const res = await fetch('http://localhost:5000/api/patients/all', {
+            const res = await fetch('https://health-chronicle.onrender.com/api/patients/all', {
                 headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
             });
             const patients = await res.json();
@@ -455,7 +455,7 @@
         saveBtn.disabled = true;
 
         try {
-            const res = await fetch('http://localhost:5000/api/health/add', {
+            const res = await fetch('https://health-chronicle.onrender.com/api/health/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(record)
@@ -701,7 +701,7 @@
 
     async function loadRecords() {
         try {
-            const res = await fetch(`http://localhost:5000/api/health/${patientId}`);
+            const res = await fetch(`https://health-chronicle.onrender.com/api/health/${patientId}`);
             const records = await res.json();
 
             const alertsDiv = document.getElementById('alertsSection');
@@ -822,7 +822,7 @@
     formData.append('documentDate', documentDate);
 
     try {
-        const res = await fetch('http://localhost:5000/api/documents/upload', {
+        const res = await fetch('https://health-chronicle.onrender.com/api/documents/upload', {
             method: 'POST',
             body: formData
         });
@@ -848,7 +848,7 @@
 }
     async function loadDocuments() {
         try {
-            const res = await fetch(`http://localhost:5000/api/documents/${patientId}`);
+            const res = await fetch(`https://health-chronicle.onrender.com/api/documents/${patientId}`);
             const docs = await res.json();
             const container = document.getElementById('documentsList');
             if (docs.length === 0) {
@@ -859,7 +859,7 @@
                 const date = doc.documentDate ? new Date(doc.documentDate).toLocaleDateString('en-IN') : 'N/A';
                 const isImage = doc.fileType && doc.fileType.startsWith('image/');
                 const isPDF = doc.fileType === 'application/pdf';
-                const fileUrl = `http://localhost:5000/uploads/${doc.filename}`;
+                const fileUrl = `https://health-chronicle.onrender.com/uploads/${doc.filename}`;
                 return `
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:8px; margin-bottom:8px;">
                         <div>
@@ -921,7 +921,7 @@
         deleteBtn.disabled = true;
 
         try {
-            const res = await fetch('http://localhost:5000/api/auth/delete', {
+            const res = await fetch('https://health-chronicle.onrender.com/api/auth/delete', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
