@@ -452,10 +452,9 @@
         const hasSystolic = record.bloodPressureSystolic !== '';
     const hasDiastolic = record.bloodPressureDiastolic !== '';
     if (hasSystolic !== hasDiastolic) {
-        alert('Please enter both Systolic and Diastolic values together, or leave both blank.');
+        showAlert('Please enter both Systolic and Diastolic values together, or leave both blank.');
         return;
     }
-
         const saveBtn = document.querySelector('button[onclick="saveRecord()"]');
         saveBtn.textContent = '⏳ Saving...';
         saveBtn.disabled = true;
@@ -483,7 +482,7 @@
                 showAlert('Failed to save record. Please try again.');
             }
         } catch (e) {
-            showAlert('Error saving record!');
+            showAlert('Error saving record. Please try again.');
         } finally {
             saveBtn.textContent = 'Save Health Record';
             saveBtn.disabled = false;
